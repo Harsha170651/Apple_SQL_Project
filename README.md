@@ -182,18 +182,218 @@ WHERE
 ORDER BY 
     s.store_id;
 ```
-13. Identify the least selling product in each country for each year based on total units sold.
-14. Calculate how many warranty claims were filed within 180 days of a product sale.
-15. Determine how many warranty claims were filed for products launched in the last two years.
-16. List the months in the last three years where sales exceeded 5,000 units in the USA.
-17. Identify the product category with the most warranty claims filed in the last two years
-18. Determine the percentage chance of receiving warranty claims after each purchase for each country.
-19. Analyze the year-by-year growth ratio for each store.
-20. Calculate the correlation between product price and warranty claims for products sold in the last five years, segmented by price range.
-21. Identify the store with the highest percentage of "Paid Repaired" claims relative to total claims filed.
-22. Write a query to calculate the monthly running total of sales for each store over the past four years and compare trends during this period
-23. Analyze product sales trends over time, segmented into key periods: from launch to 6 months, 6-12 months, 12-18 months, and beyond 18 months.
-
+11. Identify the least selling product in each country for each year based on total units sold.
+  ``` sql
+WITH product_rank
+AS
+(
+SELECT 
+	st.country,
+	p.product_name,
+	SUM(s.quantity) as total_qty_sold,
+	RANK() OVER(PARTITION BY st.country ORDER BY SUM(s.quantity)) as Rank_num
+FROM sales as s
+JOIN 
+stores as st
+ON s.store_id = st.store_id
+JOIN
+products as p
+ON s.product_id = p.product_id
+GROUP BY st.country,p.product_name
+)
+SELECT 
+* 
+FROM product_rank
+WHERE Rank_num = 1
+```
+12. Calculate how many warranty claims were filed within 180 days of a product sale.
+  ``` sql
+SELECT 
+    COUNT(*) AS total_claims
+FROM
+    warranty AS w
+        LEFT JOIN
+    sales AS s ON s.sale_id = w.sale_id
+WHERE
+    w.claim_date - sale_date <= 180;
+```
+13. Determine how many warranty claims were filed for products launched in the last two years.
+  ``` sql
+SELECT 
+    p.product_name,
+    COUNT(w.claim_id) AS no_claim,
+    COUNT(s.sale_id) AS no_sales
+FROM
+    warranty AS w
+        RIGHT JOIN
+    sales AS s ON s.sale_id = w.sale_id
+        JOIN
+    products AS p ON p.product_id = s.product_id
+WHERE
+    p.launch_date >= DATE_SUB(CURDATE(), INTERVAL 2 YEAR)
+GROUP BY p.product_name
+HAVING COUNT(w.claim_id) > 0;
+```
+14. List the months in the last three years where sales exceeded 5,000 units in the USA.
+  ``` sql
+SELECT 
+    DATE_FORMAT(s.sale_date, '%m-%Y') AS month,
+    SUM(s.quantity) AS total_unit_sold
+FROM
+    sales AS s
+        JOIN
+    stores AS st ON s.store_id = st.store_id
+WHERE
+    st.country = 'USA'
+        AND s.sale_date >= DATE_SUB(CURDATE(), INTERVAL 3 YEAR)
+GROUP BY month
+HAVING SUM(s.quantity) > 5000;
+```
+15. Identify the product category with the most warranty claims filed in the last two years
+  ``` sql
+SELECT 
+    c.category_name, COUNT(w.claim_id) AS total_claims
+FROM
+    warranty AS w
+        LEFT JOIN
+    sales AS s ON w.sale_id = s.sale_id
+        JOIN
+    products AS p ON p.product_id = s.product_id
+        JOIN
+    category AS c ON c.category_id = p.category_id
+WHERE
+    w.claim_date >= DATE_SUB(CURDATE(), INTERVAL 2 YEAR)
+GROUP BY c.category_name;
+```
+16. Determine the percentage chance of receiving warranty claims after each purchase for each country.
+   ``` sql
+SELECT 
+    country,
+    total_unit_sold,
+    total_claim,
+    COALESCE((total_claim * 100.0) / total_unit_sold,
+            0) AS risk
+FROM
+    (SELECT 
+        st.country,
+            SUM(s.quantity) AS total_unit_sold,
+            COUNT(w.claim_id) AS total_claim
+    FROM
+        sales AS s
+    JOIN stores AS st ON s.store_id = st.store_id
+    LEFT JOIN warranty AS w ON w.sale_id = s.sale_id
+    GROUP BY st.country) AS t1
+ORDER BY risk DESC;
+```
+17. Analyze the year-by-year growth ratio for each store.
+``` sql
+WITH yearly_sales AS (
+    SELECT 
+        s.store_id,
+        st.store_name,
+        YEAR(s.sale_date) AS year,
+        SUM(s.quantity * p.price) AS total_sale
+    FROM sales AS s
+    JOIN products AS p
+        ON s.product_id = p.product_id
+    JOIN stores AS st
+        ON st.store_id = s.store_id
+    GROUP BY s.store_id, st.store_name, year
+    ORDER BY st.store_name, year
+),
+growth_ratio AS (
+    SELECT 
+        store_name,
+        year,
+        LAG(total_sale) OVER (PARTITION BY store_name ORDER BY year) AS last_year_sale,
+        total_sale AS current_year_sale
+    FROM yearly_sales
+)
+SELECT 
+    store_name,
+    year,
+    last_year_sale,
+    current_year_sale,
+    ROUND(((current_year_sale - last_year_sale) / last_year_sale) * 100, 3) AS growth_ratio
+FROM growth_ratio
+WHERE 
+    last_year_sale IS NOT NULL
+    AND year <> YEAR(CURDATE());
+```
+18. Calculate the correlation between product price and warranty claims for products sold in the last five years, segmented by price range.
+  ``` sql
+SELECT 
+    CASE
+        WHEN p.price < 500 THEN 'Less Expensive Product'
+        WHEN p.price BETWEEN 500 AND 1000 THEN 'Mid-Range Product'
+        ELSE 'Expensive Product'
+    END AS price_segment,
+    COUNT(w.claim_id) AS total_claim
+FROM
+    warranty AS w
+        LEFT JOIN
+    sales AS s ON w.sale_id = s.sale_id
+        JOIN
+    products AS p ON p.product_id = s.product_id
+WHERE
+    w.claim_date >= DATE_SUB(CURDATE(), INTERVAL 5 YEAR)
+GROUP BY price_segment;
+```
+19. Write a query to calculate the monthly running total of sales for each store over the past four years and compare trends during this period
+   ``` sql
+WITH monthly_sales AS (
+    SELECT 
+        s.store_id,
+        YEAR(s.sale_date) AS year,
+        MONTH(s.sale_date) AS month,
+        SUM(p.price * s.quantity) AS total_revenue
+    FROM sales AS s
+    JOIN products AS p
+        ON s.product_id = p.product_id
+    WHERE s.sale_date >= DATE_SUB(CURDATE(), INTERVAL 4 YEAR) -- Filter for the past 4 years
+    GROUP BY s.store_id, year, month
+    ORDER BY s.store_id, year, month
+)
+SELECT 
+    store_id,
+    month,
+    year,
+    total_revenue,
+    SUM(total_revenue) OVER (PARTITION BY store_id ORDER BY year, month) AS running_total
+FROM monthly_sales;
+```
+20. Analyze product sales trends over time, segmented into key periods: from launch to 6 months, 6-12 months, 12-18 months, and beyond 18 months.
+``` sql
+SELECT 
+    p.product_name,
+    CASE
+        WHEN
+            s.sale_date BETWEEN p.launch_date AND DATE_ADD(p.launch_date,
+                INTERVAL 6 MONTH)
+        THEN
+            '0-6 month'
+        WHEN
+            s.sale_date BETWEEN DATE_ADD(p.launch_date,
+                INTERVAL 6 MONTH) AND DATE_ADD(p.launch_date,
+                INTERVAL 12 MONTH)
+        THEN
+            '6-12 month'
+        WHEN
+            s.sale_date BETWEEN DATE_ADD(p.launch_date,
+                INTERVAL 12 MONTH) AND DATE_ADD(p.launch_date,
+                INTERVAL 18 MONTH)
+        THEN
+            '12-18 month'
+        ELSE '18+ month'
+    END AS plc,
+    SUM(s.quantity) AS total_qty_sale
+FROM
+    sales AS s
+        JOIN
+    products AS p ON s.product_id = p.product_id
+GROUP BY p.product_name , plc
+ORDER BY p.product_name , total_qty_sale DESC;
+```
 ## Project Focus
 
 This project primarily focuses on developing and showcasing the following SQL skills:
