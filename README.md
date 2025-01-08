@@ -417,10 +417,10 @@ ORDER BY p.product_name , total_qty_sale DESC;
 * Analyzed product pricing and warranty claims, contributing to informed decision-making about product launches and warranties.
   
 ## Skills Gained:
--**Advanced SQL Proficiency**: Mastery in designing complex queries, using CTEs, window functions, and aggregations.
--**Data Segmentation**: Expertise in dividing data into meaningful segments for detailed analysis.
--**Correlation Analysis**: Developed insights into relationships between key variables, like product price and warranty claim frequency.
--**Problem-Solving**: Tackled real-world business questions and provided data-driven recommendations.
+* Advanced SQL Proficiency: Mastery in designing complex queries, using CTEs, window functions, and aggregations.
+* Data Segmentation: Expertise in dividing data into meaningful segments for detailed analysis.
+* Correlation Analysis: Developed insights into relationships between key variables, like product price and warranty claim frequency.
+* Problem-Solving: Tackled real-world business questions and provided data-driven recommendations.
 
 ## Conclusion:
 Completing this project enhanced my confidence in handling large-scale datasets and solving complex analytical problems. It also strengthened my ability to derive insights that drive business decisions. This experience positions me as a skilled data analyst capable of leveraging SQL to tackle real-world challenges effectively.
