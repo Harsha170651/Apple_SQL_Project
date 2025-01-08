@@ -53,10 +53,8 @@ The project is split into three tiers of questions to test SQL skills of increas
 1. Find the number of stores in each country.
    ``` sql
    SELECT 
-    country, 
-    COUNT(store_id) AS Total_stores
-FROM
-    stores
+    country, COUNT(store_id) AS Total_stores
+FROM  stores
 GROUP BY country
 ORDER BY Total_stores desc;
 ```
