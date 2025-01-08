@@ -10,7 +10,7 @@ The project is ideal for data analysts looking to enhance their SQL skills by wo
 
 ## Entity Relationship Diagram (ERD)
 
-![ERD](https://github.com/najirh/Apple-Retail-Sales-SQL-Project---Analyzing-Millions-of-Sales-Rows/blob/main/erd.png)
+![Screenshot 2025-01-08 at 10 52 20 AM 2](https://github.com/user-attachments/assets/0bbdc496-8cf7-4d25-baa5-677f2dc8e2b6)
 
 ## Database Schema
 
