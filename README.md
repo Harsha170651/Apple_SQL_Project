@@ -79,24 +79,120 @@ WHERE
     YEAR(sale_date) = '2023'
         AND MONTH(sale_date) = '12';
 ```
-5. Determine how many stores have never had a warranty claim filed.
-6. Calculate the percentage of warranty claims marked as "Warranty Void".
-7. Identify which store had the highest total units sold in the last year.
-8. Count the number of unique products sold in the last year.
-9. Find the average price of products in each category.
-10. How many warranty claims were filed in 2020?
-11. For each store, identify the best-selling day based on highest quantity sold.
-12. Identify the least selling product in each country for each year based on total units sold.
-13. Calculate how many warranty claims were filed within 180 days of a product sale.
-14. Determine how many warranty claims were filed for products launched in the last two years.
-15. List the months in the last three years where sales exceeded 5,000 units in the USA.
-16. Identify the product category with the most warranty claims filed in the last two years
-17. Determine the percentage chance of receiving warranty claims after each purchase for each country.
-18. Analyze the year-by-year growth ratio for each store.
-19. Calculate the correlation between product price and warranty claims for products sold in the last five years, segmented by price range.
-20. Identify the store with the highest percentage of "Paid Repaired" claims relative to total claims filed.
-21. Write a query to calculate the monthly running total of sales for each store over the past four years and compare trends during this period
-22. Analyze product sales trends over time, segmented into key periods: from launch to 6 months, 6-12 months, 12-18 months, and beyond 18 months.
+4. Determine how many stores have never had a warranty claim filed.
+  ``` sql
+SELECT 
+    COUNT(*) AS total_stores
+FROM
+    stores
+WHERE
+    store_id NOT IN (SELECT DISTINCT
+            store_id
+        FROM
+            sales AS s
+                RIGHT JOIN
+            warranty AS w ON w.sale_id = s.sale_id)
+```
+5. Calculate the percentage of warranty claims marked as "Warranty Void".
+  ``` sql
+SELECT 
+    ROUND(COUNT(claim_id)/ (select count(*) from warranty) *  100, 1) AS warranty_void_percentage
+FROM
+    warranty
+WHERE
+    repair_status = 'warranty void'
+```
+6. Identify which store had the highest total units sold in the last year.
+``` sql
+SELECT 
+    sa.store_id, st.store_name, SUM(sa.quantity) AS total_sales
+FROM
+    sales AS sa
+        JOIN
+    stores AS st ON st.store_id = sa.store_id
+WHERE
+    sale_date >= CURDATE() - INTERVAL 1 YEAR
+GROUP BY sa.store_id , st.store_name
+ORDER BY SUM(sa.quantity) DESC
+LIMIT 1;
+```
+7. Count the number of unique products sold in the last year.
+ ``` sql
+SELECT DISTINCT
+    COUNT(s.product_id) AS total_product, p.product_name
+FROM
+    sales AS s
+        JOIN
+    products AS p ON p.product_id = s.product_id
+WHERE
+    sale_date >= CURDATE() - INTERVAL 1 YEAR
+GROUP BY product_name
+ORDER BY COUNT(s.product_id) DESC
+lIMIT 1;
+```
+8. Find the average price of products in each category.
+  ``` sql
+SELECT 
+    c.category_id,
+    c.category_name,
+    round(AVG(p.price),1) AS Avg_price
+FROM 
+    products AS p
+JOIN 
+    category AS c
+ON 
+    c.category_id = p.category_id
+GROUP BY 
+    c.category_id, c.category_name
+ORDER BY 
+    avg_price DESC;
+```
+9. How many warranty claims were filed in 2020?
+  ``` sql
+SELECT 
+    COUNT(claim_id) AS warranty_claims
+FROM
+    warranty
+WHERE
+    YEAR(claim_date) = 2020;
+```
+10. For each store, identify the best-selling day based on highest quantity sold.
+   ``` sql
+SELECT 
+    s.store_id,
+    s.store_name,
+    DATE_FORMAT(sa.sale_date, '%Y-%m-%d') AS best_selling_day,
+    sa.quantity AS highest_qty_sold
+FROM 
+    sales AS sa
+JOIN 
+    stores AS s
+ON 
+    sa.store_id = s.store_id
+WHERE 
+    (sa.store_id, sa.quantity) IN (
+        SELECT 
+            store_id, 
+            MAX(quantity) AS max_qty
+        FROM 
+            sales
+        GROUP BY 
+            store_id
+    )
+ORDER BY 
+    s.store_id;
+```
+13. Identify the least selling product in each country for each year based on total units sold.
+14. Calculate how many warranty claims were filed within 180 days of a product sale.
+15. Determine how many warranty claims were filed for products launched in the last two years.
+16. List the months in the last three years where sales exceeded 5,000 units in the USA.
+17. Identify the product category with the most warranty claims filed in the last two years
+18. Determine the percentage chance of receiving warranty claims after each purchase for each country.
+19. Analyze the year-by-year growth ratio for each store.
+20. Calculate the correlation between product price and warranty claims for products sold in the last five years, segmented by price range.
+21. Identify the store with the highest percentage of "Paid Repaired" claims relative to total claims filed.
+22. Write a query to calculate the monthly running total of sales for each store over the past four years and compare trends during this period
+23. Analyze product sales trends over time, segmented into key periods: from launch to 6 months, 6-12 months, 12-18 months, and beyond 18 months.
 
 ## Project Focus
 
