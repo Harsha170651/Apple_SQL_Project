@@ -46,9 +46,7 @@ The project uses five main tables:
    - `sale_id`: References the sales table.
    - `repair_status`: Status of the warranty claim (e.g., Paid Repaired, Warranty Void).
 
-## Objectives
-
-The project is split into three tiers of questions to test SQL skills of increasing complexity:
+## SQL Questions with Answers:
 
 1. Find the number of stores in each country.
    ``` sql
@@ -58,8 +56,29 @@ FROM  stores
 GROUP BY country
 ORDER BY Total_stores desc;
 ```
-3. Calculate the total number of units sold by each store.
-4.  Identify how many sales occurred in December 2023.
+2. Calculate the total number of units sold by each store.
+``` sql
+SELECT 
+    sa.store_id,
+    st.store_name,
+    SUM(sa.quantity) AS total_unit_sold
+FROM
+    sales AS sa
+        JOIN
+    stores AS st ON st.store_id = sa.store_id
+GROUP BY sa.store_id , st.store_name
+ORDER BY SUM(sa.quantity) DESC;
+```
+3.  Identify how many sales occurred in December 2023
+  ``` sql
+SELECT 
+    COUNT(sale_id) AS total_sales
+FROM
+    sales
+WHERE
+    YEAR(sale_date) = '2023'
+        AND MONTH(sale_date) = '12';
+```
 5. Determine how many stores have never had a warranty claim filed.
 6. Calculate the percentage of warranty claims marked as "Warranty Void".
 7. Identify which store had the highest total units sold in the last year.
