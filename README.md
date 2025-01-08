@@ -56,6 +56,7 @@ FROM  stores
 GROUP BY country
 ORDER BY Total_stores desc;
 ```
+
 2. Calculate the total number of units sold by each store.
 ``` sql
 SELECT 
