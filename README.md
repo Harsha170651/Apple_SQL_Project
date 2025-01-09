@@ -1,5 +1,5 @@
 # My Experience with the Apple Retail Sales SQL Project 
- ![Uploading Apple_Changsha_RetailTeamMembers_09012021_big.jpg.slideshow-xlarge_2x.jpg…]() Retail Sales SQL Project - Analyzing Millions of Sales Rows
+![Apple_Changsha_RetailTeamMembers_09012021_big jpg slideshow-xlarge_2x](https://github.com/user-attachments/assets/31b541ec-ec3b-4586-80d8-4d252b5a1c8c)Retail Sales SQL Project - Analyzing Millions of Sales Rows
 
 
 ## Project Overview
